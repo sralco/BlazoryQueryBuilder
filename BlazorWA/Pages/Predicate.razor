@@ -16,8 +16,8 @@
     case ExpressionType.LessThan:
         <RelationalPredicate Binary="@GetBinaryExpression()"
                              Parameter="@Parameter"
-                             @OnChange="Change"
-                             @OnRemove="Remove">
+                             OnChange="@Change"
+                             OnRemove="@Remove">
         </RelationalPredicate>
         break;
 }
