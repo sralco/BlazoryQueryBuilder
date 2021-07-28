@@ -1,0 +1,126 @@
+﻿@page "/query"
+@using System.Linq.Expressions
+@using System.Linq.Dynamic
+@using System.Linq.Dynamic.Core
+@using System.Reflection
+@using Newtonsoft.Json
+@using BlazorQueryBuilder.Visitors
+@using BlazoryQueryBuilder.Shared.Models
+@using BlazoryQueryBuilder.Shared.Services
+@using System.Reflection
+@inject PredicateFactory PredicateFactory
+@inject HttpClient HttpClient
+@inject QueryBuilderService<TEntity> QueryBuilderService
+@typeparam TEntity
+
+<div class="form-group">
+    <h3>Properties</h3>
+    @foreach (var property in typeof(TEntity).GetProperties())
+    {
+        <input class="form-check-input" type="checkbox" @onchange="eventArgs => { SelectProperty(property, eventArgs.Value); }">
+        <div>@property.Name</div>
+    }
+</div>
+
+<h1>Expression</h1>
+<div class="row">
+    <div class="col-12">
+        <LambdaComponent OnChanged="@OnChanged"
+                         Lambda="@QueryBuilderService.Lambda"
+                         Parameter="@QueryBuilderService.Parameter">
+        </LambdaComponent>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <button class="btn btn-primary" @onclick="RunQuery">Run Query</button>
+    </div>
+</div>
+<div class="row">
+    <div class="col-12">
+        @if (!_data.Any())
+        {
+            <div>No results.</div>
+        }
+        @foreach (var data in _data)
+        {
+            <ul>
+                <li>@(JsonConvert.SerializeObject(data))</li>
+            </ul>
+        }
+    </div>
+</div>
+
+@functions {
+
+    List<TEntity> _data = new List<TEntity>();
+
+    Expression<Func<TEntity, bool>> Predicate => (Expression<Func<TEntity, bool>>)QueryBuilderService.Lambda;
+    List<PropertyInfo> SelectedProperties = new List<PropertyInfo>();
+
+    [Parameter]
+    public string Expression { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (string.IsNullOrWhiteSpace(Expression))
+        {
+            QueryBuilderService.LoadEntity();
+        }
+        else
+        {
+            QueryBuilderService.LoadQuery(Expression);
+        }
+    }
+
+
+    public void SelectProperty(System.Reflection.PropertyInfo property, object value)
+    {
+        if (!SelectedProperties.Contains(property))
+        {
+            SelectedProperties.Add(property);
+        }
+        else
+        {
+            SelectedProperties.Remove(property);
+        }
+        Console.WriteLine(SelectedProperties.Count);
+    }
+
+    private async Task RunQuery()
+    {
+        Func<TEntity, bool> predicate = Predicate.Compile();
+
+
+        //var data = await HttpClient.PostAsJsonAsync<IEnumerable<TEntity>>(
+        //   //  HttpMethod.Post,
+        //   "https://localhost:44338/api/values",
+        //   new BlazoryQueryBuilder.Shared.Models.Predicate
+        //   {
+        //       LambdaExpression = Predicate.ToString(),
+        //       EntityType = typeof(TEntity).Name,
+        //       SelectedProperties = SelectedProperties.Select(prop => prop.Name).ToList()
+        //   });
+
+        var data = await HttpClient.PostAsJsonAsync<BlazoryQueryBuilder.Shared.Models.Predicate>(
+        //  HttpMethod.Post,
+        "https://localhost:44338/api/values",
+        new BlazoryQueryBuilder.Shared.Models.Predicate
+        {
+            LambdaExpression = Predicate.ToString(),
+            EntityType = typeof(TEntity).Name,
+            SelectedProperties = SelectedProperties.Select(prop => prop.Name).ToList()
+        });
+
+        //_data = data.ToList();
+    }
+
+    private void OnChanged(Expression body)
+    {
+        LambdaExpression newLambda = new ReplaceLambdaBody(QueryBuilderService.Lambda, body).Replace();
+        QueryBuilderService.Lambda = newLambda;
+        StateHasChanged();
+    }
+
+}

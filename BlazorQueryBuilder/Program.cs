@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Blazor.Hosting;
-
+//
 namespace BlazorQueryBuilder
 {
     public class Program

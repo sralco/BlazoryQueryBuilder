@@ -1,0 +1,44 @@
+﻿@using System.Linq.Expressions
+@using System.Reflection
+@using BlazoryQueryBuilder.Shared.Models
+@using BlazorQueryBuilder.Visitors
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <code>@Lambda.ToString()</code>
+    </div>
+</div>
+<div class="form-group">
+    <Predicate Expression="@GetBodyAsBinary()"
+               Parameter="@Parameter"
+               @OnChange="OnChangeBody">
+    </Predicate>
+</div>
+
+@functions {
+    [Parameter]
+    public LambdaExpression Lambda { get; set; }
+
+    [Parameter]
+    public ParameterExpression Parameter { get; set; }
+
+    [Parameter]
+    public  Action<Expression> OnChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        OnChanged(Lambda.Body);
+    }
+
+    private BinaryExpression GetBodyAsBinary()
+    {
+        return Lambda.Body as BinaryExpression;
+    }
+
+    private void OnChangeBody(Expression body)
+    {
+        OnChanged(body);
+        StateHasChanged();
+    }
+
+}
