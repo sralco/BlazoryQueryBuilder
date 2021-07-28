@@ -88,8 +88,8 @@ namespace BlazoryQueryBuilder.Api
                 .Entity<Person>()
                 .ToTable(nameof(Person));
 
-            if (_options.Extensions.Select(e => e.GetType()).Contains(typeof(InMemoryDbContextOptionsExtensions)))
-            {
+            //if (_options.Extensions.Select(e => e.GetType()).Contains(typeof(InMemoryDbContextOptionsExtensions)))
+            //{
                 modelBuilder
                     .Entity<Person>()
                     .HasData(
@@ -108,7 +108,7 @@ namespace BlazoryQueryBuilder.Api
                             Addresses = new List<Address>()
                         });
 
-            }
+           // }
 
             modelBuilder
                 .Entity<Person>()

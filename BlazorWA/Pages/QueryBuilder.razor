@@ -1,13 +1,17 @@
 ﻿@page "/query"
 @using System.Linq.Expressions
-@using System.Linq.Dynamic
 @using System.Linq.Dynamic.Core
 @using System.Reflection
 @using Newtonsoft.Json
 @using BlazorQueryBuilder.Visitors
 @using BlazoryQueryBuilder.Shared.Models
 @using BlazoryQueryBuilder.Shared.Services
-@using System.Reflection
+@using System.Net.Http;
+@using System.Text;
+@using System.Threading.Tasks;
+@using System.Threading.Tasks;
+@using Microsoft.AspNetCore.Components;
+
 @inject PredicateFactory PredicateFactory
 @inject HttpClient HttpClient
 @inject QueryBuilderService<TEntity> QueryBuilderService
@@ -93,7 +97,7 @@
         Func<TEntity, bool> predicate = Predicate.Compile();
 
 
-        //var data = await HttpClient.PostAsJsonAsync<IEnumerable<TEntity>>(
+        //var data = await HttpClient.SendJsonAsync<IEnumerable<TEntity>>(
         //   //  HttpMethod.Post,
         //   "https://localhost:44338/api/values",
         //   new BlazoryQueryBuilder.Shared.Models.Predicate
@@ -103,8 +107,7 @@
         //       SelectedProperties = SelectedProperties.Select(prop => prop.Name).ToList()
         //   });
 
-        var data = await HttpClient.PostAsJsonAsync<BlazoryQueryBuilder.Shared.Models.Predicate>(
-        //  HttpMethod.Post,
+        var response = await HttpClient.PostAsJsonAsync<BlazoryQueryBuilder.Shared.Models.Predicate>(
         "https://localhost:44338/api/values",
         new BlazoryQueryBuilder.Shared.Models.Predicate
         {
@@ -113,7 +116,10 @@
             SelectedProperties = SelectedProperties.Select(prop => prop.Name).ToList()
         });
 
-        //_data = data.ToList();
+        IEnumerable<TEntity> data = await response.Content.ReadFromJsonAsync<IEnumerable<TEntity>>();
+
+
+        _data = data.ToList();
     }
 
     private void OnChanged(Expression body)
